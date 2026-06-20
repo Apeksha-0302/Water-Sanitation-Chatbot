@@ -63,10 +63,8 @@ if st.button("Get Advice"):
 
         try:
             response = model.generate_content(prompt)
-            st.subheader("AI Response")
             st.write(response.text)
         except Exception as e:
             st.error(f"Error: {e}")
 
 st.markdown("---")
-st.caption("Built using Streamlit + Gemini API | SDG 6 Project")
