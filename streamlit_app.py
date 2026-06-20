@@ -1,56 +1,72 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+# Page settings
+st.set_page_config(
+    page_title="AI Water Conservation Assistant",
+    page_icon="💧",
+    layout="centered"
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+# Load Gemini API key from secrets.toml
+api_key = st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=api_key)
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+# Use supported Gemini model
+model = genai.GenerativeModel("gemini-3.5-flash")
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+# App UI
+st.title("💧 AI Water Conservation Assistant")
 
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+st.write(
+    "Ask questions about water conservation, sanitation, rainwater harvesting, "
+    "water pollution, and sustainable water use."
+)
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
+with st.expander("Example Questions"):
+    st.write("• How can I save water at home?")
+    st.write("• What is rainwater harvesting?")
+    st.write("• Why is clean water important?")
+    st.write("• How can schools conserve water?")
+    st.write("• What causes water pollution?")
 
-        # Store and display the current prompt.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+user_input = st.text_area(
+    "Enter your question:",
+    placeholder="Example: How can I save water in daily life?"
+)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
+if st.button("Get Advice"):
+    if user_input.strip() == "":
+        st.warning("Please enter a question first.")
+    else:
+        prompt = f"""
+        You are an AI Water Conservation Assistant for SDG 6: Clean Water and Sanitation.
 
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        Your task is to answer only questions related to:
+        - Water conservation
+        - Clean water
+        - Sanitation
+        - Rainwater harvesting
+        - Water pollution
+        - Sustainable water usage
+        - Water saving tips for homes, schools, and communities
+
+        Rules:
+        1. Give simple, clear, student-friendly answers.
+        2. Keep the answer informative but easy to understand.
+        3. If the question is unrelated to water or sanitation, politely say:
+           "I can only help with water conservation and sanitation related questions."
+
+        User question:
+        {user_input}
+        """
+
+        try:
+            response = model.generate_content(prompt)
+            st.subheader("AI Response")
+            st.write(response.text)
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+st.markdown("---")
+st.caption("Built using Streamlit + Gemini API | SDG 6 Project")
