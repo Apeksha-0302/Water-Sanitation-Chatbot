@@ -1,19 +1,34 @@
-# 💬 Chatbot template
+import streamlit as st
+import google.generativeai as genai
 
-A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
+# Add your Gemini API Key
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://chatbot-template.streamlit.app/)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-### How to run it on your own machine
+st.title("💧 AI Water Conservation Assistant")
 
-1. Install the requirements
+user_input = st.text_area(
+    "Ask a question about water conservation and sanitation:"
+)
 
-   ```
-   $ pip install -r requirements.txt
-   ```
+if st.button("Get Advice"):
+    if user_input:
+        prompt = f"""
+        You are a Water Conservation Assistant.
 
-2. Run the app
+        Answer the user's question about:
+        - Water Conservation
+        - Clean Water
+        - Sanitation
+        - Rainwater Harvesting
+        - Water Pollution
 
-   ```
-   $ streamlit run streamlit_app.py
-   ```
+        User Question:
+        {user_input}
+        """
+
+        response = model.generate_content(prompt)
+
+        st.subheader("AI Response")
+        st.write(response.text)
