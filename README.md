@@ -4,7 +4,7 @@ import google.generativeai as genai
 # Add your Gemini API Key
 genai.configure(api_key="YOUR_GEMINI_API_KEY")
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 st.title("💧 AI Water Conservation Assistant")
 
